@@ -195,3 +195,67 @@ app.get('/api/test', (req, res) => {
 app.listen(PORT, () => {
   console.log(`🚀 Servidor backend corriendo en http://localhost:${PORT}`);
 });
+
+// Endpoint para dashboard - eventos con recaudación
+app.get('/api/dashboard/events', async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT 
+        e.id,
+        e.titulo,
+        e.descripcion,
+        e.moneda,
+        a.nombre as area_nombre,
+        COUNT(d.id) as total_donaciones,
+        COALESCE(SUM(CASE WHEN d.estado = 'pagada' THEN d.monto ELSE 0 END), 0) as total_recaudado
+      FROM evento e
+      LEFT JOIN area a ON e.area_id = a.id
+      LEFT JOIN donacion d ON e.id = d.id_evento
+      GROUP BY e.id, a.nombre
+      ORDER BY e.id DESC
+    `);
+
+    res.json({ events: result.rows });
+  } catch (error) {
+    console.error('Error loading events for dashboard:', error);
+    res.status(500).json({ error: 'Error loading events' });
+  }
+});
+
+// Endpoint para donaciones de un evento específico
+app.get('/api/dashboard/events/:eventId/donations', async (req, res) => {
+  try {
+    const { eventId } = req.params;
+    const result = await pool.query(`
+      SELECT d.*, u.nombre as donador_nombre
+      FROM donacion d
+      LEFT JOIN usuario u ON d.id_usuario = u.id
+      WHERE d.id_evento = $1
+      ORDER BY d.creado_en DESC
+    `, [eventId]);
+
+    res.json({ donations: result.rows });
+  } catch (error) {
+    console.error('Error loading donations:', error);
+    res.status(500).json({ error: 'Error loading donations' });
+  }
+});
+
+// Endpoint para transferencias de un evento específico
+app.get('/api/dashboard/events/:eventId/transfers', async (req, res) => {
+  try {
+    const { eventId } = req.params;
+    const result = await pool.query(`
+      SELECT t.*, o.nombre as organizacion_nombre
+      FROM transferencia t
+      LEFT JOIN organizacion o ON t.organizacion_id = o.id
+      WHERE t.evento_id = $1
+      ORDER BY t.programada_en DESC
+    `, [eventId]);
+
+    res.json({ transfers: result.rows });
+  } catch (error) {
+    console.error('Error loading transfers:', error);
+    res.status(500).json({ error: 'Error loading transfers' });
+  }
+});
