@@ -3,12 +3,7 @@ import { Link } from 'react-router-dom';
 
 function HomePage() {
   return (
-    <div style={{ textAlign: 'center', padding: '50px 20px' }}>
-      <h1>TrustChain</h1>
-      <p style={{ fontSize: '18px', color: '#666', marginBottom: '30px' }}>
-        Transparencia total en donaciones a eventos de caridad mediante tecnología blockchain
-      </p>
-      
+    <div style={{ textAlign: 'center', padding: '50px 20px' }}>   
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px', marginTop: '40px' }}>
         <div style={{ border: '1px solid #ddd', padding: '20px', borderRadius: '8px' }}>
           <h3>👥 Para Donadores</h3>

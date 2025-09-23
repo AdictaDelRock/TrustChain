@@ -8,6 +8,7 @@ function RegisterEvent() {
     start_at: '',
     end_at: '',
     area_id: '',
+    payment_pointer:'',
   });
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
@@ -124,12 +125,22 @@ function RegisterEvent() {
               <option value="">Selecciona un área</option>
               <option value="1">Derechos humanos</option>
               <option value="2">Protección del medio ambiente</option>
-              <option value="3">Asistencia médica</option>
-              <option value="4">Educación</option>
-              <option value="5">Ayuda humanitaria</option>
-              <option value="6">Desarrollo económico</option>
             </select>
           </label>
+        </div>
+
+        <div style={{ marginBottom: '15px' }}>
+          <label style={{ display: 'block', marginBottom: '5px' }}>
+            Ingresa el Wallet Address:
+          </label>
+          <input 
+            type="text"  
+            name="payment_pointer" 
+            value={formData.payment_pointer} 
+            onChange={handleChange} 
+            required 
+            style={{ width: '100%', padding: '8px' }}
+          />
         </div>
         
         <button 

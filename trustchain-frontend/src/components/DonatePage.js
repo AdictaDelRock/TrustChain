@@ -116,6 +116,21 @@ function DonatePage() {
             style={{ width: '100%', padding: '8px' }}
           />
         </div>
+
+        <div style={{ marginBottom: '15px' }}>
+          <label style={{ display: 'block', marginBottom: '5px' }}>
+            Ingresa tu Wallet Address:
+          </label>
+          <input 
+            type="text" 
+            value={amount} 
+            onChange={(e) => setAmount(e.target.value)} 
+            required 
+            min="1"
+            step="0.01"
+            style={{ width: '100%', padding: '8px' }}
+          />
+        </div>
         
         <button 
           type="submit" 
