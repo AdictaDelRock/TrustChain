@@ -17,5 +17,5 @@ Utilizaremos una arquitectura cliente/servidor.
 •	¿Quién será responsable de construir qué parte?
 •	Chavez Castañeda Pablo: Desarrollo del Front End de la página, integración de la Open Payment API, cronometrador.
 •	Franco Rodríguez María Guadalupe: Desarrollo y diseño del Front End de la página, creación del pitch.
-•	Sanchez Flores María Fernanda: Desarrollo del Back End, diseño y conexión de la base de datos, integración de recomendaciones generadas por IA.
+•	Sanchez Flores María Fernanda: Desarrollo del Back End, diseño y conexión de la base de datos.
 
