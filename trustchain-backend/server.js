@@ -1,15 +1,39 @@
+const { Pool } = require('pg');
 const express = require('express');
 const cors = require('cors');
-const crypto = require('crypto'); // Para generar IDs de transacción
-const data = require('./data.json');
+const crypto = require('crypto');
 
 const app = express();
 const PORT = 5000;
 
+// Configuración de la base de datos PostgreSQL
+const pool = new Pool({
+  user: 'postgres',
+  host: 'localhost',
+  database: 'TrustChainBD',
+  password: '856595J',
+  port: 5432,
+});
+
+// Verificar conexión a la BD
+pool.connect((err, client, release) => {
+  if (err) {
+    console.error('Error conectando a la base de datos:', err);
+  } else {
+    console.log('Conexión a PostgreSQL establecida correctamente');
+    release();
+  }
+});
+
 // Simula una base de datos en memoria para el hackathon
 const donationsDB = [];
 const eventsDB = [
-  { id: 'event-1', name: 'Evento de Caridad ESCOM', targetAmount: 10000, currentAmount: 0 }
+  { 
+    id: 'event-1', 
+    titulo: 'Evento de Caridad ESCOM', 
+    targetAmount: 10000, 
+    currentAmount: 0 
+  }
 ];
 
 app.use(express.json());
@@ -17,18 +41,58 @@ app.use(cors());
 
 // Endpoint para agregar un nuevo evento
 app.post('/api/events', (req, res) => {
-  const eventData = req.body;
-  const newEvent = { 
-    id: `event-${crypto.randomBytes(4).toString('hex')}`,
-    name: eventData.name, 
-    targetAmount: eventData.targetAmount,
-    currentAmount: 0
-  };
-  eventsDB.push(newEvent);
-  res.status(201).json({ message: 'Evento agregado con éxito.', event: newEvent });
+  try {
+    const { titulo, descripcion, start_at, end_at, area_id } = req.body;
+    
+    console.log('Datos recibidos para nuevo evento:', req.body);
+    
+    // Validaciones básicas
+    if (!titulo || !start_at || !end_at) {
+      return res.status(400).json({ 
+        error: 'Faltan campos requeridos: titulo, start_at, end_at' 
+      });
+    }
+
+    // Crear nuevo evento con la estructura que espera tu frontend
+    const newEvent = { 
+      id: `event-${crypto.randomBytes(4).toString('hex')}`,
+      titulo: titulo,
+      descripcion: descripcion || '',
+      start_at: start_at,
+      end_at: end_at,
+      area_id: area_id || null,
+      targetAmount: 10000, // Valor por defecto para el hackathon
+      currentAmount: 0
+    };
+    
+    eventsDB.push(newEvent);
+    
+    console.log('Evento creado exitosamente:', newEvent);
+    
+    res.status(201).json({ 
+      success: true,
+      message: 'Evento registrado con éxito.', 
+      event: newEvent 
+    });
+    
+  } catch (error) {
+    console.error('Error al crear evento:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Error interno del servidor al crear el evento.' 
+    });
+  }
 });
 
-// Endpoint para procesar una donación (simulando Interledger)
+// Endpoint para obtener eventos (de la memoria)
+app.get('/api/events', (req, res) => {
+  res.status(200).json({
+    success: true,
+    events: eventsDB
+  });
+});
+
+// Endpoint para procesar una donación
 app.post('/api/donate', (req, res) => {
   const { eventId, amount } = req.body;
   const event = eventsDB.find(e => e.id === eventId);
@@ -48,7 +112,7 @@ app.post('/api/donate', (req, res) => {
   donationsDB.push(newDonation);
   event.currentAmount += amount;
 
-  console.log(`Donación procesada. ID: ${transactionId}, Monto: ${amount}, Evento: ${event.name}`);
+  console.log(`Donación procesada. ID: ${transactionId}, Monto: ${amount}, Evento: ${event.titulo}`);
 
   res.status(200).json({ 
     message: 'Donación procesada con éxito a través de Interledger.',
@@ -57,12 +121,10 @@ app.post('/api/donate', (req, res) => {
   });
 });
 
-// Endpoint para obtener datos del dashboard de transparencia
-// En tu server.js, reemplaza el endpoint '/api/dashboard' con este
-// Este endpoint obtendrá la lista de eventos directamente de tu base de datos
+// Endpoint corregido para el dashboard (usa pool en lugar de db)
 app.get('/api/dashboard', async (req, res) => {
   try {
-    const eventsResult = await db.query(
+    const eventsResult = await pool.query(
       `SELECT
          e.id, e.titulo, e.descripcion, e.moneda,
          SUM(CASE WHEN d.estado = 'pagada' THEN d.monto ELSE 0 END) AS total_recaudado
@@ -87,20 +149,14 @@ app.get('/api/dashboard', async (req, res) => {
     res.status(500).json({ error: 'Error del servidor al cargar los eventos.' });
   }
 });
-app.listen(PORT, () => {
-  console.log(`Servidor backend corriendo en http://localhost:${PORT}`);
-});
 
-// ... (código para importar express, cors, db, etc.)
-// ... (asegúrate de tener tu conexión a la BD en db.js)
-
-// Nuevo endpoint para el inicio de sesión
+// Endpoint corregido para el inicio de sesión (usa pool en lugar de db)
 app.post('/api/login', async (req, res) => {
   const { nombre, password } = req.body;
 
   try {
     // 1. Encontrar el usuario por nombre
-    const userResult = await db.query(
+    const userResult = await pool.query(
       `SELECT id, password_hash, tipo FROM usuario WHERE nombre = $1`,
       [nombre]
     );
@@ -111,9 +167,6 @@ app.post('/api/login', async (req, res) => {
 
     const user = userResult.rows[0];
 
-    // 2. En una app real, aquí se usaría bcrypt para comparar la contraseña
-    // const passwordMatch = await bcrypt.compare(password, user.password_hash);
-    
     // Para el hackathon, simulamos que la contraseña es "12345"
     if (password === "12345") {
       // Autenticación exitosa. Devuelve el ID del usuario y el tipo.
@@ -129,4 +182,16 @@ app.post('/api/login', async (req, res) => {
     console.error('Error en el inicio de sesión:', error);
     res.status(500).json({ error: 'Error interno del servidor.' });
   }
+});
+
+// Endpoint de prueba para verificar que el servidor funciona
+app.get('/api/test', (req, res) => {
+  res.json({ 
+    message: 'Servidor funcionando correctamente',
+    timestamp: new Date().toISOString()
+  });
+});
+
+app.listen(PORT, () => {
+  console.log(`🚀 Servidor backend corriendo en http://localhost:${PORT}`);
 });

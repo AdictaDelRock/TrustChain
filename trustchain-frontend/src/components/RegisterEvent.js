@@ -9,6 +9,7 @@ function RegisterEvent() {
     end_at: '',
     area_id: '',
   });
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -18,57 +19,134 @@ function RegisterEvent() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
+    
     try {
+      console.log('Datos a enviar:', formData);
+      
       const response = await fetch('http://localhost:5000/api/events', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify(formData),
       });
 
+      console.log('Respuesta HTTP:', response.status, response.statusText);
+      
+      const result = await response.json();
+      console.log('Respuesta completa:', result);
+
       if (!response.ok) {
-        throw new Error('Error al registrar el evento.');
+        throw new Error(result.message || `Error ${response.status}: ${response.statusText}`);
       }
 
-      const result = await response.json();
-      console.log('Evento registrado:', result);
+      console.log('Evento registrado exitosamente:', result);
       alert('Evento registrado con éxito.');
-      navigate('/'); // Redirige a la página principal
+      navigate('/');
+      
     } catch (error) {
-      console.error(error);
-      alert(error.message);
+      console.error('Error completo:', error);
+      alert(`Error: ${error.message}`);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div>
+    <div style={{ maxWidth: '500px', margin: '0 auto', padding: '20px' }}>
       <h2>Registrar Nuevo Evento</h2>
       <form onSubmit={handleSubmit}>
-        <label>
-          Título:
-          <input type="text" name="titulo" value={formData.titulo} onChange={handleChange} required />
-        </label>
-        <br />
-        <label>
-          Descripción:
-          <textarea name="descripcion" value={formData.descripcion} onChange={handleChange}></textarea>
-        </label>
-        <br />
-        <label>
-          Inicio:
-          <input type="datetime-local" name="start_at" value={formData.start_at} onChange={handleChange} required />
-        </label>
-        <br />
-        <label>
-          Fin:
-          <input type="datetime-local" name="end_at" value={formData.end_at} onChange={handleChange} required />
-        </label>
-        <br />
-        <label>
-          ID de Área:
-          <input type="number" name="area_id" value={formData.area_id} onChange={handleChange} required />
-        </label>
-        <br />
-        <button type="submit">Registrar Evento</button>
+        <div style={{ marginBottom: '15px' }}>
+          <label>
+            Título:
+            <input 
+              type="text" 
+              name="titulo" 
+              value={formData.titulo} 
+              onChange={handleChange} 
+              required 
+              style={{ width: '100%', padding: '8px', marginTop: '5px' }}
+            />
+          </label>
+        </div>
+        
+        <div style={{ marginBottom: '15px' }}>
+          <label>
+            Descripción:
+            <textarea 
+              name="descripcion" 
+              value={formData.descripcion} 
+              onChange={handleChange}
+              style={{ width: '100%', padding: '8px', marginTop: '5px', height: '100px' }}
+            ></textarea>
+          </label>
+        </div>
+        
+        <div style={{ marginBottom: '15px' }}>
+          <label>
+            Fecha y hora de inicio:
+            <input 
+              type="datetime-local" 
+              name="start_at" 
+              value={formData.start_at} 
+              onChange={handleChange} 
+              required 
+              style={{ width: '100%', padding: '8px', marginTop: '5px' }}
+            />
+          </label>
+        </div>
+        
+        <div style={{ marginBottom: '15px' }}>
+          <label>
+            Fecha y hora de fin:
+            <input 
+              type="datetime-local" 
+              name="end_at" 
+              value={formData.end_at} 
+              onChange={handleChange} 
+              required 
+              style={{ width: '100%', padding: '8px', marginTop: '5px' }}
+            />
+          </label>
+        </div>
+        
+        <div style={{ marginBottom: '15px' }}>
+          <label>
+            Área:
+            <select 
+              name="area_id" 
+              value={formData.area_id} 
+              onChange={handleChange} 
+              required
+              style={{ width: '100%', padding: '8px', marginTop: '5px' }}
+            >
+              <option value="">Selecciona un área</option>
+              <option value="1">Derechos humanos</option>
+              <option value="2">Protección del medio ambiente</option>
+              <option value="3">Asistencia médica</option>
+              <option value="4">Educación</option>
+              <option value="5">Ayuda humanitaria</option>
+              <option value="6">Desarrollo económico</option>
+            </select>
+          </label>
+        </div>
+        
+        <button 
+          type="submit" 
+          disabled={isLoading}
+          style={{ 
+            width: '100%', 
+            padding: '10px', 
+            backgroundColor: isLoading ? '#ccc' : '#007bff',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: isLoading ? 'not-allowed' : 'pointer'
+          }}
+        >
+          {isLoading ? 'Registrando...' : 'Registrar Evento'}
+        </button>
       </form>
     </div>
   );
