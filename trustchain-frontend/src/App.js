@@ -6,6 +6,7 @@ import HomePage from './components/HomePage';
 import AdminPage from './components/AdminPage';
 import DonatePage from './components/DonatePage';
 import DashboardPage from './components/DashboardPage';
+import RegisterEvent from './components/RegisterEvent';
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
           <Route path="/admin" element={<AdminPage />} />
           <Route path="/donate" element={<DonatePage />} />
           <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/registerevent" element={<RegisterEvent />} />
         </Routes>
       </main>
     </div>
